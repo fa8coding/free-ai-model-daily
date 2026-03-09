@@ -1,4 +1,4 @@
-name: 每日免费AI Model搜索 + 微信推送（Google强过滤版）
+name: 每日免费AI Model搜索 + 微信推送（保底混合版）
 
 on:
   schedule:
@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: 安装依赖并安装浏览器
+      - name: 安装依赖
         run: |
           pip install playwright
           playwright install chromium --with-deps
@@ -31,9 +31,9 @@ jobs:
       - name: 自动提交更新
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 Google强过滤版 - 更新每日免费Model报告"
+          commit_message: "🤖 保底混合版 - 更新每日免费Model报告"
 
-      - name: 发送微信推送（超级调试版）
+      - name: 发送微信推送（超级诊断版）
         if: always()
         continue-on-error: true
         env:
@@ -43,10 +43,10 @@ jobs:
         run: |
           echo "=== 推送诊断开始 ==="
           if [ -z "$PUSHPLUS_TOKEN" ]; then
-            echo "❌ 错误：PUSHPLUS_TOKEN 未设置！请按上方教程检查 Secrets"
+            echo "❌ Token 未设置！请去 Settings → Secrets 添加 PUSHPLUS_TOKEN"
             exit 0
           fi
-          echo "✅ Token 已检测到（长度: ${#PUSHPLUS_TOKEN}）"
+          echo "✅ Token 已检测（长度 ${#PUSHPLUS_TOKEN}）"
 
           TITLE="🤖 每日免费AI Model报告已更新 - $(date '+%Y-%m-%d')"
           CONTENT="✅ 今天共发现 **${COUNT:-0}** 条高质量免费Model！%0A%0A📄 [立即查看报告](https://github.com/${REPO}/blob/main/daily_report.md)"
@@ -58,7 +58,7 @@ jobs:
             -d "template=markdown" \
             -s)
 
-          echo "📨 PushPlus 完整返回："
+          echo "📨 PushPlus 返回："
           echo "$RESPONSE"
-          echo "=== 推送诊断结束 ==="
-          echo "🎉 如果上面出现 code:200 就代表微信已收到！"
+          echo "=== 诊断结束 ==="
+          echo "🎉 如果出现 code:200 → 微信已收到！否则检查微信是否关注 PushPlus 公众号"

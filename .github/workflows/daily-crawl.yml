@@ -1,4 +1,4 @@
-name: 每日免费AI Model搜索 + 微信推送
+name: 每日免费AI Model搜索 + 微信推送（Playwright版）
 
 on:
   schedule:
@@ -19,8 +19,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: 安装依赖
-        run: pip install duckduckgo-search
+      - name: 安装 Python 依赖
+        run: pip install playwright
+
+      - name: 安装 Playwright 浏览器（关键！）
+        run: playwright install chromium --with-deps
 
       - name: 运行爬虫并生成报告
         id: crawl
@@ -29,9 +32,9 @@ jobs:
       - name: 自动提交更新
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 更新每日免费Model报告"
+          commit_message: "🤖 Playwright升级 - 更新每日免费Model报告"
 
-      - name: 发送微信推送（PushPlus）
+      - name: 发送微信推送（PushPlus 极致调试版）
         if: always()
         continue-on-error: true
         env:
@@ -40,13 +43,13 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           if [ -z "$PUSHPLUS_TOKEN" ]; then
-            echo "⚠️ 未设置 PUSHPLUS_TOKEN，请检查 Secrets"
+            echo "⚠️ 未设置 PUSHPLUS_TOKEN！请检查 Settings → Secrets"
             exit 0
           fi
 
           echo "🚀 正在发送微信推送..."
           TITLE="🤖 每日免费AI Model报告已更新 - $(date '+%Y-%m-%d')"
-          CONTENT="✅ 今天共发现 **${COUNT:-0}** 条高质量免费Model！%0A%0A📄 [立即查看报告](https://github.com/${REPO}/blob/main/daily_report.md)"
+          CONTENT="✅ 今天共发现 **${COUNT:-0}** 条高质量免费Model！%0A%0A📄 [立即查看完整报告](https://github.com/${REPO}/blob/main/daily_report.md)"
 
           RESPONSE=$(curl -v -X POST "http://www.pushplus.plus/send" \
             -d "token=${PUSHPLUS_TOKEN}" \
@@ -55,6 +58,6 @@ jobs:
             -d "template=markdown" \
             -s)
 
-          echo "📨 PushPlus 返回："
+          echo "📨 PushPlus 完整返回："
           echo "$RESPONSE"
-          echo "🎉 推送请求完成！"
+          echo "🎉 推送请求完成！（如果 code:200 就成功收到微信）"

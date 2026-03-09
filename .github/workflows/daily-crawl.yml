@@ -1,0 +1,48 @@
+name: 每日免费AI Model搜索 + 微信推送
+
+on:
+  schedule:
+    - cron: '0 0 * * *'      # 每天北京时间早上 8:00
+  workflow_dispatch:         # 手动测试按钮
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: pip install duckduckgo-search
+
+      - name: 运行爬虫并生成报告
+        id: crawl
+        run: python crawler.py
+
+      - name: 自动提交更新
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 更新每日免费Model报告"
+
+      - name: 发送微信推送（PushPlus）
+        if: always()
+        env:
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          COUNT: ${{ steps.crawl.outputs.count }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$PUSHPLUS_TOKEN" ]; then
+            echo "⚠️ 未设置 PUSHPLUS_TOKEN，跳过推送"
+            exit 0
+          fi
+          TITLE="🤖 每日免费AI Model报告已更新 - $(date '+%Y-%m-%d')"
+          CONTENT="✅ 今天共发现 **${COUNT}** 条最新免费Model使用方式！%0A%0A📄 [立即查看完整报告](https://github.com/${REPO}/blob/main/daily_report.md)%0A%0A由 GitHub Actions 自动推送"
+          curl -s "http://www.pushplus.plus/send?token=${PUSHPLUS_TOKEN}&title=${TITLE}&content=${CONTENT}&template=markdown"
+          echo "🎉 微信推送已发送！"

@@ -2,7 +2,7 @@ name: 每日免费AI Model搜索 + 微信推送
 
 on:
   schedule:
-    - cron: '0 0 * * *'      # 每天北京时间早上 8:00
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:
@@ -33,28 +33,28 @@ jobs:
 
       - name: 发送微信推送（PushPlus）
         if: always()
-        continue-on-error: true          # 推送失败不影响整体成功
+        continue-on-error: true
         env:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           COUNT: ${{ steps.crawl.outputs.count }}
           REPO: ${{ github.repository }}
         run: |
           if [ -z "$PUSHPLUS_TOKEN" ]; then
-            echo "⚠️ 未设置 PUSHPLUS_TOKEN，跳过推送"
-            echo "（请确认已在 Settings → Secrets and variables → Actions 添加了该密钥）"
+            echo "⚠️ 未设置 PUSHPLUS_TOKEN，请检查 Secrets"
             exit 0
           fi
 
           echo "🚀 正在发送微信推送..."
-
           TITLE="🤖 每日免费AI Model报告已更新 - $(date '+%Y-%m-%d')"
-          CONTENT="✅ 今天共发现 **${COUNT:-0}** 条最新免费Model使用方式！%0A%0A📄 [立即查看完整报告](https://github.com/${REPO}/blob/main/daily_report.md)%0A%0A由 GitHub Actions 自动推送"
+          CONTENT="✅ 今天共发现 **${COUNT:-0}** 条高质量免费Model！%0A%0A📄 [立即查看报告](https://github.com/${REPO}/blob/main/daily_report.md)"
 
-          curl -X POST "http://www.pushplus.plus/send" \
+          RESPONSE=$(curl -v -X POST "http://www.pushplus.plus/send" \
             -d "token=${PUSHPLUS_TOKEN}" \
             -d "title=${TITLE}" \
             -d "content=${CONTENT}" \
             -d "template=markdown" \
-            -s
+            -s)
 
-          echo "🎉 微信推送请求已发送！"
+          echo "📨 PushPlus 返回："
+          echo "$RESPONSE"
+          echo "🎉 推送请求完成！"
